@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 # Download dataset — run this in Colab first:
-# !wget -q https://raw.githubusercontent.com/mwitiderrick/stockprice/master/NSE-TATAGLOBAL.csv
+# !wget -q https://raw.githubusercontent.com/mwitiderrick/stockprice/master/NSE-TATAGLOBAL.csv  -> run this file first
 
 df = pd.read_csv('NSE-TATAGLOBAL.csv')
 data = df['Close'].values.reshape(-1, 1)
