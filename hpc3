@@ -1,0 +1,22 @@
+#include <iostream>
+#include <climits>
+#include <omp.h>
+using namespace std;
+
+int main() {
+    int arr[] = {3,7,1,9,4,6,2,8,5};
+    int n = 9;
+    int mn=INT_MAX, mx=INT_MIN, sum=0;
+
+    #pragma omp parallel for reduction(min:mn) reduction(max:mx) reduction(+:sum)
+    for (int i = 0; i < n; i++) {
+        mn = min(mn, arr[i]);
+        mx = max(mx, arr[i]);
+        sum += arr[i];
+    }
+
+    cout << "Min: " << mn << endl;
+    cout << "Max: " << mx << endl;
+    cout << "Sum: " << sum << endl;
+    cout << "Avg: " << (float)sum/n << endl;
+}
