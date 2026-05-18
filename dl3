@@ -1,0 +1,46 @@
+
+import tensorflow as tf
+
+# Load Fashion MNIST (built-in, no download needed)
+(X_train, y_train), (X_test, y_test) = \
+    tf.keras.datasets.fashion_mnist.load_data()
+
+# Normalize and reshape
+X_train = X_train / 255.0
+X_test  = X_test  / 255.0
+X_train = X_train[..., tf.newaxis]
+X_test  = X_test[...,  tf.newaxis]
+
+# Class names for display
+class_names = ['T-shirt', 'Trouser', 'Pullover', 'Dress', 'Coat',
+               'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+
+# Build CNN model
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1)),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+model.summary()
+
+# Train
+model.fit(X_train, y_train, epochs=10, batch_size=64,
+          validation_split=0.1, verbose=1)
+
+# Evaluate
+loss, acc = model.evaluate(X_test, y_test, verbose=0)
+print(f"\nTest Accuracy: {acc:.4f}")
+
+# Sample prediction
+import numpy as np
+pred = model.predict(X_test[:1])
+print(f"Predicted: {class_names[np.argmax(pred)]}")
+print(f"Actual:    {class_names[y_test[0]]}")
