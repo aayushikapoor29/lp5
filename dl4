@@ -1,0 +1,49 @@
+import numpy as np
+import tensorflow as tf
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+
+# Download dataset — run this in Colab first:
+# !wget -q https://raw.githubusercontent.com/mwitiderrick/stockprice/master/NSE-TATAGLOBAL.csv
+
+df = pd.read_csv('NSE-TATAGLOBAL.csv')
+data = df['Close'].values.reshape(-1, 1)
+
+# Scale data
+scaler = MinMaxScaler()
+data = scaler.fit_transform(data)
+
+# Create sequences of 60 timesteps
+def make_sequences(data, steps=60):
+    X, y = [], []
+    for i in range(steps, len(data)):
+        X.append(data[i-steps:i])
+        y.append(data[i])
+    return np.array(X), np.array(y)
+
+X, y = make_sequences(data)
+split = int(len(X) * 0.8)
+X_train, X_test = X[:split], X[split:]
+y_train, y_test = y[:split], y[split:]
+
+# Build LSTM model
+model = tf.keras.Sequential([
+    tf.keras.layers.LSTM(50, return_sequences=True, input_shape=(60, 1)),
+    tf.keras.layers.LSTM(50),
+    tf.keras.layers.Dense(1)
+])
+
+model.compile(optimizer='adam', loss='mse')
+model.summary()
+
+# Train
+model.fit(X_train, y_train, epochs=20, batch_size=32, verbose=1)
+
+# Predict and inverse scale
+preds  = scaler.inverse_transform(model.predict(X_test))
+actual = scaler.inverse_transform(y_test)
+
+print("\nSample Predictions vs Actual:")
+for i in range(5):
+    print(f"Predicted: {preds[i][0]:.2f}  |  Actual: {actual[i][0]:.2f}")
+
