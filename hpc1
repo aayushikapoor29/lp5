@@ -1,3 +1,6 @@
+g++ -fopenmp hpc_aiml.cpp -o hpc_aiml
+./hpc_aiml
+
 #include <iostream>
 #include <vector>
 #include <queue>
