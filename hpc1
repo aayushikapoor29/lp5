@@ -1,0 +1,53 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <omp.h>
+using namespace std;
+
+vector<int> adj[100];
+bool visited[100];
+
+void bfs(int start, int n) {
+    queue<int> q;
+    visited[start] = true;
+    q.push(start);
+    cout << "BFS: ";
+    while (!q.empty()) {
+        int node = q.front(); q.pop();
+        cout << node << " ";
+        #pragma omp parallel for
+        for (int i = 0; i < adj[node].size(); i++) {
+            int next = adj[node][i];
+            if (!visited[next]) {
+                #pragma omp critical
+                { visited[next] = true; q.push(next); }
+            }
+        }
+    }
+    cout << endl;
+}
+
+void dfs(int node) {
+    visited[node] = true;
+    cout << node << " ";
+    #pragma omp parallel for
+    for (int i = 0; i < adj[node].size(); i++)
+        if (!visited[adj[node][i]])
+            #pragma omp critical
+            dfs(adj[node][i]);
+}
+
+int main() {
+    int n = 6;
+    adj[0] = {1, 2}; adj[1] = {0, 3, 4};
+    adj[2] = {0, 5}; adj[3] = {1};
+    adj[4] = {1};    adj[5] = {2};
+
+    fill(visited, visited+n, false);
+    bfs(0, n);
+
+    fill(visited, visited+n, false);
+    cout << "DFS: ";
+    dfs(0);
+    cout << endl;
+}
