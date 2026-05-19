@@ -1,0 +1,85 @@
+Option 1 — Google Colab (free, easiest)
+
+Go to colab.research.google.com
+Runtime → Change runtime type → Select GPU → Save
+In a cell run:
+
+python%%writefile vector_add.cu
+# paste your vector_add.cu code here
+python!nvcc vector_add.cu -o vector_add && ./vector_add
+Same for matrix_mul:
+python%%writefile matrix_mul.cu
+# paste your matrix_mul.cu code here
+python!nvcc matrix_mul.cu -o matrix_mul && ./matrix_mul
+
+
+Option 2 — Your college lab computers
+Most engineering colleges with HPC syllabus have CUDA-enabled machines in the lab. Just run:
+bashnvcc vector_add.cu -o vector_add
+./vector_add
+
+nvcc matrix_mul.cu -o matrix_mul
+./matrix_mul
+
+
+
+// vector_add.cu
+#include <iostream>
+using namespace std;
+__global__ void vectorAdd(int *a, int *b, int *c, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) c[i] = a[i] + b[i];
+}
+int main() {
+    int n = 5;
+    int a[]={1,2,3,4,5}, b[]={10,20,30,40,50}, c[5];
+    int *da, *db, *dc;
+    int size = n * sizeof(int);
+    cudaMalloc(&da, size); cudaMalloc(&db, size); cudaMalloc(&dc, size);
+    cudaMemcpy(da, a, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(db, b, size, cudaMemcpyHostToDevice);
+    vectorAdd<<<1, n>>>(da, db, dc, n);
+    cudaMemcpy(c, dc, size, cudaMemcpyDeviceToHost);
+    cout << "Vector Addition: ";
+    for(int i=0;i<n;i++) cout << c[i] << " ";
+    cout << endl;
+    cudaFree(da); cudaFree(db); cudaFree(dc);
+}
+
+// matrix_mul.cu
+#include <iostream>
+using namespace std;
+#define N 3
+__global__ void matMul(int *a, int *b, int *c) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row < N && col < N) {
+        int sum = 0;
+        for (int k = 0; k < N; k++)
+            sum += a[row*N+k] * b[k*N+col];
+        c[row*N+col] = sum;
+    }
+}
+int main() {
+    int a[N*N]={1,2,3,4,5,6,7,8,9};
+    int b[N*N]={9,8,7,6,5,4,3,2,1};
+    int c[N*N];
+    int *da,*db,*dc;
+    int size=N*N*sizeof(int);
+    cudaMalloc(&da,size); cudaMalloc(&db,size); cudaMalloc(&dc,size);
+    cudaMemcpy(da,a,size,cudaMemcpyHostToDevice);
+    cudaMemcpy(db,b,size,cudaMemcpyHostToDevice);
+    dim3 block(N,N); dim3 grid(1,1);
+    matMul<<<grid,block>>>(da,db,dc);
+    cudaMemcpy(c,dc,size,cudaMemcpyDeviceToHost);
+    cout << "Matrix Multiplication:\n";
+    for(int i=0;i<N;i++){
+        for(int j=0;j<N;j++) cout<<c[i*N+j]<<" ";
+        cout<<endl;
+    }
+    cudaFree(da); cudaFree(db); cudaFree(dc);
+}
+
+
+
+where do i perfrom these two codess
